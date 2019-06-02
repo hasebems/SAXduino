@@ -15,6 +15,7 @@
 #include <Arduino.h>
 
 int analogDataRead( void );
+void displayError( void );
 void setAda88_Number( int );
 void setMidiBuffer( uint8_t dt0, uint8_t dt1, uint8_t dt2 );
 
@@ -27,27 +28,33 @@ void lightLed( void );
 class GlobalTimer {
 
 public:
-  GlobalTimer( void ) : _globalTime(0), _gtOld(0), _timer100msec(0), _timer100msec_sabun(0),
+  GlobalTimer( void ) : _globalTime(0), _timer100msec(0), _timer100msec_sabun(0),
                         _timer1sec(0), _timer1sec_sabun(0), _timer10msec_event(false),
                         _timer100msec_event(false), _timer1sec_event(false) {}
 
-  void      setGlobalTime( uint16_t tm ){ _globalTime = tm;}
   void      incGlobalTime( void ){ _globalTime++;}
-  uint16_t  globalTime( void ) const { return _globalTime;}
-  void      setGtOld( uint16_t tm ){ _gtOld = tm;}
-  uint16_t  gtOld( void ) const { return _gtOld;}
+  uint32_t  readGlobalTimeAndClear( void )
+  {
+    noInterrupts();
+    uint32_t tm = _globalTime;
+    _globalTime = 0;
+    interrupts();
+    return tm;
+  }
   void      setTimer100ms( uint16_t tm ){ _timer100msec = tm;}
-  uint16_t  timer100ms( void ) const { return _timer100msec;}
-  uint16_t  timer1s( void ) const { return _timer1sec;}
+  uint32_t  timer10ms( void ) const { return _timer10msec;}
+  uint32_t  timer100ms( void ) const { return _timer100msec;}
+  uint32_t  timer1s( void ) const { return _timer1sec;}
 
   void      clearAllTimerEvent( void ){ _timer10msec_event = _timer100msec_event = _timer1sec_event = false;}
   bool      timer10msecEvent( void ) const { return _timer10msec_event;}
   bool      timer100msecEvent( void ) const { return _timer100msec_event;}
   bool      timer1secEvent( void ) const { return _timer1sec_event;}
   
-  void      updateTimer( long diff )
+  void      updateTimer( uint32_t diff )
   {
     if ( diff > 0 ){
+      _timer10msec += diff;
       _timer10msec_event = true;
     }
 
@@ -71,11 +78,11 @@ public:
 
 private:
 
-  volatile uint16_t  _globalTime;
-  uint16_t  _gtOld;
-  uint16_t  _timer100msec;
-  uint16_t  _timer100msec_sabun;
-  uint16_t  _timer1sec;
-  uint16_t  _timer1sec_sabun;
+  volatile uint8_t  _globalTime;
+  uint32_t  _timer10msec;
+  uint32_t  _timer100msec;
+  uint32_t  _timer100msec_sabun;
+  uint32_t  _timer1sec;
+  uint32_t  _timer1sec_sabun;
 };
 #endif

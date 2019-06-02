@@ -31,17 +31,11 @@ AirPressure ap;
 #endif
 
 extern GlobalTimer gt;
-extern uint16_t swState[2];
 
-//-------------------------------------------------------------------------
-void MagicFlute::periodic100msec( void )
-{
-  setNeoPixelExp( _doremi, _midiExp ); //  for debug
-}
 //-------------------------------------------------------------------------
 const unsigned char MagicFlute::swTable[64] = {
 
-//   ooo   oox   oxo   oxx   xoo   xox   xxo   xxx  right hand
+//   ooo   oox   oxo   oxx   xoo   xox   xxo   xxx  right hand (x:hold, o:open)
 //  do(hi) so    fa    la    mi    ti    re    do
     0x24, 0x1f, 0x1d, 0x21, 0x1c, 0x23, 0x1a, 0x18,     //  ooo left hand
     0x25, 0x20, 0x1e, 0x20, 0x1b, 0x22, 0x1b, 0x19,     //  oox
@@ -52,6 +46,65 @@ const unsigned char MagicFlute::swTable[64] = {
     0x0c, 0x07, 0x05, 0x09, 0x04, 0x0b, 0x02, 0x00,     //  xxo
     0x0d, 0x08, 0x06, 0x08, 0x03, 0x0a, 0x03, 0x01      //  xxx
 };
+
+/*----------------------------------------------------------------------------*/
+//
+//     Check Touch Sensor & Generate MIDI Event
+//
+/*----------------------------------------------------------------------------*/
+void MagicFlute::checkSixTouch( void )
+{
+  uint8_t swb[2] = {};
+
+#ifdef USE_CY8CMBR3110
+  int err = MBR3110_readTouchSw(swb);
+#endif
+  if ( err == 0 ){
+    _swState = ((uint16_t)swb[0]) | ((uint16_t)swb[1]<<8);
+    uint8_t tch = 0;
+    if ( swb[0] & 0x20 ){ tch |= 0x01;}
+    if ( swb[0] & 0x10 ){ tch |= 0x02;}
+    if ( swb[0] & 0x08 ){ tch |= 0x04;}
+    if ( swb[0] & 0x04 ){ tch |= 0x08;}
+    if ( swb[0] & 0x02 ){ tch |= 0x10;}
+    if ( swb[0] & 0x01 ){ tch |= 0x20;}
+    analyseSixTouchSens(tch);
+  }
+}
+/*----------------------------------------------------------------------------*/
+int MagicFlute::midiOutAirPressure( void )
+{
+  int prs = 0;
+#ifdef USE_AIR_PRESSURE
+  prs = ap.getPressure();
+  if ( gt.timer10msecEvent() == true ){
+    if ( ap.generateExpEvent(midiExpPtr()) == true ){
+      if ( nowPlaying() == false ){
+        if ( _midiExp > 0 ){
+          _nowPlaying = true;
+          setMidiBuffer( 0x90, _crntNote, 0x7f );
+          _doremi = _crntNote%12;
+        }
+      }
+      else {
+        if ( _midiExp == 0 ){
+          _nowPlaying = false;
+          setMidiBuffer( 0x80, _crntNote, 0x40 );
+          _doremi = 12;
+        }
+      }
+      setMidiBuffer( 0xb0, 0x0b, _midiExp );
+      setMidiBuffer( 0xb0, 0x01, (_midiExp>>2)+64 );
+    }
+  }
+#endif
+  return prs;
+}
+//-------------------------------------------------------------------------
+void MagicFlute::periodic100msec( void )
+{
+  setNeoPixelExp( _doremi, _midiExp ); //  for debug
+}
 //-------------------------------------------------------------------------
 void MagicFlute::setNewTouch( uint8_t tch )
 {
@@ -142,7 +195,7 @@ void MagicFlute::analyseSixTouchSens( uint8_t tch )
 
   if ( gt.timer10msecEvent() == true ){
     uint8_t mdNote;
-    if ( catchEventOfPeriodic(mdNote, gt.globalTime()) == true ){
+    if ( catchEventOfPeriodic(mdNote, gt.timer10ms()) == true ){
       if ( _nowPlaying == true ){
         if ( mdNote != _crntNote ){
           setMidiBuffer( 0x90, mdNote, 0x7f );
@@ -163,64 +216,6 @@ void MagicFlute::analyseSixTouchSens( uint8_t tch )
   }
 }
 /*----------------------------------------------------------------------------*/
-int MagicFlute::checkSixTouch_AndAirPressure( void )
-{
-  uint8_t swb[2];
-  int err = 1, prs = 0;
-
-  //  Air Pressure Sensor
-  prs = midiOutAirPressure();
-
-#ifdef USE_CY8CMBR3110
-  err = MBR3110_readTouchSw(swb);
-#endif
-  if ( err == 0 ){
-    swState[0] = ((uint16_t)swb[0]) | ((uint16_t)swb[1]<<8);
-    uint8_t tch = 0;
-    if ( swb[0] & 0x20 ){ tch |= 0x01;}
-    if ( swb[0] & 0x10 ){ tch |= 0x02;}
-    if ( swb[0] & 0x08 ){ tch |= 0x04;}
-    if ( swb[0] & 0x04 ){ tch |= 0x08;}
-    if ( swb[0] & 0x02 ){ tch |= 0x10;}
-    if ( swb[0] & 0x01 ){ tch |= 0x20;}
-    analyseSixTouchSens(tch);
-  }
-  return prs;
-}
-/*----------------------------------------------------------------------------*/
-//
-//     Check Touch Sensor & Generate MIDI Event
-//
-/*----------------------------------------------------------------------------*/
-int MagicFlute::midiOutAirPressure( void )
-{
-  int prs = 0;
-#ifdef USE_AIR_PRESSURE
-  prs = ap.getPressure();
-  if ( gt.timer10msecEvent() == true ){
-    if ( ap.generateExpEvent(midiExpPtr()) == true ){
-      if ( nowPlaying() == false ){
-        if ( _midiExp > 0 ){
-          _nowPlaying = true;
-          setMidiBuffer( 0x90, _crntNote, 0x7f );
-          _doremi = _crntNote%12;
-        }
-      }
-      else {
-        if ( _midiExp == 0 ){
-          _nowPlaying = false;
-          setMidiBuffer( 0x80, _crntNote, 0x40 );
-          _doremi = 12;
-        }
-      }
-      setMidiBuffer( 0xb0, 0x0b, _midiExp );
-      setMidiBuffer( 0xb0, 0x01, (_midiExp>>2)+64 );
-    }
-  }
-#endif
-  return prs;
-}
-/*----------------------------------------------------------------------------*/
 void MagicFlute::setNeoPixelExp( uint8_t note, uint8_t exprs )
 {
 #if 0
@@ -229,7 +224,7 @@ void MagicFlute::setNeoPixelExp( uint8_t note, uint8_t exprs )
   if ( exprs == 0 ){ blinkNum = 0;}
 
   for ( int i=0; i<MAX_LED; i++ ){
-    if (( i<blinkNum ) /*& !( swState[0] & (0x0080>>i))*/){
+    if (( i<blinkNum ) /*& !( _swState & (0x0080>>i))*/){
       setLed( i, colorTbl(note%16,0), colorTbl(note%16,1), colorTbl(note%16,2));
     }
     else {
@@ -239,7 +234,7 @@ void MagicFlute::setNeoPixelExp( uint8_t note, uint8_t exprs )
 #else
   uint8_t light = (exprs >> 4) + 1;  // 1-8
   for ( int i=0; i<MAX_LED; i++ ){
-    if ( swState[0] & (0x0001<<i)){
+    if ( _swState & (0x0001<<i)){
       int16_t red = colorTbl(note%16,0)*light/8;
       int16_t green = colorTbl(note%16,1)*light/8;
       int16_t blue = colorTbl(note%16,2)*light/8;

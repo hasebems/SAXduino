@@ -138,6 +138,48 @@ static const unsigned char CAP_SENSE_ADDRESS_2 = 0x39;
 //      Write CY8CMBR3110 Config Data
 //
 /*----------------------------------------------------------------------------*/
+#if 1 // wide range small resolution
+/* Project: C:\Users\hasebems\Documents\Cypress Projects\Design0602\Design0602.cprj
+ * Generated: 2019/06/02 6:52:53 +09:00 */
+static const unsigned char tCY8CMBR3110_ConfigData[CONFIG_DATA_SZ] = {
+    0xFFu, 0x03u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u,
+    0xFFu, 0xFFu, 0x0Fu, 0x00u, 0x80u, 0x80u, 0x80u, 0x80u,
+    0x80u, 0x80u, 0x80u, 0x80u, 0x80u, 0x80u, 0x00u, 0x00u,
+    0x00u, 0x00u, 0x00u, 0x00u, 0x03u, 0x00u, 0x00u, 0x00u,
+    0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x80u,
+    0x05u, 0x00u, 0x00u, 0x02u, 0x00u, 0x02u, 0x00u, 0x00u,
+    0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x1Eu, 0x1Eu, 0x00u,
+    0x00u, 0x1Eu, 0x1Eu, 0x00u, 0x00u, 0x00u, 0x01u, 0x01u,
+    0x00u, 0xFFu, 0xFFu, 0xFFu, 0xFFu, 0xFFu, 0x00u, 0x00u,
+    0x00u, 0x00u, 0x00u, 0x00u, 0x11u, 0x02u, 0x01u, 0x08u,
+    0x00u, 0x38u, 0x01u, 0x00u, 0x00u, 0x0Au, 0x00u, 0x00u,
+    0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u,
+    0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u,
+    0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u,
+    0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u,
+    0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0xB7u, 0xCAu
+};
+/* Project: C:\Users\hasebems\Documents\Cypress Projects\Design0602\Design0602-2.cprj
+ * Generated: 2019/06/02 7:07:15 +09:00 */
+static const unsigned char tCY8CMBR3110_2_ConfigData[CONFIG_DATA_SZ] = {
+    0xFFu, 0x03u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u,
+    0xFFu, 0xFFu, 0x0Fu, 0x00u, 0x80u, 0x80u, 0x80u, 0x80u,
+    0x80u, 0x80u, 0x80u, 0x80u, 0x80u, 0x80u, 0x00u, 0x00u,
+    0x00u, 0x00u, 0x00u, 0x00u, 0x03u, 0x00u, 0x00u, 0x00u,
+    0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x80u,
+    0x05u, 0x00u, 0x00u, 0x02u, 0x00u, 0x02u, 0x00u, 0x00u,
+    0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x1Eu, 0x1Eu, 0x00u,
+    0x00u, 0x1Eu, 0x1Eu, 0x00u, 0x00u, 0x00u, 0x01u, 0x01u,
+    0x00u, 0xFFu, 0xFFu, 0xFFu, 0xFFu, 0xFFu, 0x00u, 0x00u,
+    0x00u, 0x00u, 0x00u, 0x00u, 0x11u, 0x02u, 0x01u, 0x08u,
+    0x00u, 0x39u, 0x01u, 0x00u, 0x00u, 0x0Au, 0x00u, 0x00u,
+    0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u,
+    0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u,
+    0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u,
+    0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u,
+    0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x94u, 0x1Eu
+};
+#else // small range fine resolution
 /* Generated: 2019/03/09 14:04:18 +09:00 */
 static const unsigned char tCY8CMBR3110_ConfigData[CONFIG_DATA_SZ] =
 {
@@ -178,6 +220,7 @@ static const unsigned char tCY8CMBR3110_2_ConfigData[CONFIG_DATA_SZ] =
     0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u,
     0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0xA2u, 0x72u
 };
+#endif
 //-------------------------------------------------------------------------
 static const unsigned char* tConfigPtr[2] =
 {
@@ -196,49 +239,74 @@ int MBR3110_init( int number )
  	unsigned char i2cdata[2];
 	unsigned char selfCheckResult;
 
-  int   err = 0;
   const unsigned char* configData = tConfigPtr[number];
   unsigned char i2cAdrs = tI2cAdrs[number];
-  bool  isI2cAdrsOK = false;
 
-  while( isI2cAdrsOK != true ){
-    delay(15);
-	  i2cdata[0] = CTRL_CMD;
-  	i2cdata[1] = POWER_ON_AND_FINISHED;
-	  write_i2cDevice(i2cAdrs,i2cdata,2);
-    delay(900);
+  delay(15);
+	i2cdata[0] = CTRL_CMD;
+  i2cdata[1] = POWER_ON_AND_FINISHED;
+	write_i2cDevice(i2cAdrs,i2cdata,2);
+  delay(900);
 
-    {
-      unsigned char checksum1, checksum2;
-      checksum1 = configData[126];
-   	  checksum2 = configData[127];
-      int cnfgerr = MBR3110_checkWriteConfig(checksum1,checksum2,i2cAdrs);     
-      
-      if ( cnfgerr == 0 ){
-        //  5. Finally, checksum got correct.
-        isI2cAdrsOK = true;
-      }
-   	  else if ( cnfgerr == -1 ){
-        //  2. I2c address is correct, but checksum is wrong.
-   		  cnfgerr = MBR3110_writeConfig(number,i2cAdrs);
-
-        if ( cnfgerr != 0 ){
-          //  3. I2c address in Register is wrong(factory-set), then set to factory-set address.
-          i2cAdrs = CAP_SENSE_ADDRESS_ORG;
-        }
-        else {
-          //  4. Configuration has written, so change I2c address.
-          i2cAdrs = tI2cAdrs[number];
-        }
-   	  }
-      else {
-        //  1. I2c address is wrong, then set to factory-set address.
-        i2cAdrs = CAP_SENSE_ADDRESS_ORG;
-      }
-    }
+  unsigned char checksum1, checksum2;
+  checksum1 = configData[126];
+  checksum2 = configData[127];
+  int err = MBR3110_checkWriteConfig(checksum1,checksum2,i2cAdrs);
+  if ( err != 0 ){
+    return err;
   }
 
   err = MBR3110_selfTest(&selfCheckResult,number);
+  if ( err != 0 ){ return err; }
+
+  if ( selfCheckResult & 0x80 ){
+    err = selfCheckResult & 0x1f;  //  SENSOR_COUNT
+    return err;
+  }
+
+  return err;
+}
+//-------------------------------------------------------------------------
+int MBR3110_setup( int number )
+{
+  unsigned char i2cdata[2];
+  unsigned char selfCheckResult;
+  unsigned char i2cAdrs = 0;
+
+  while(1){
+#if ( FIRMMODE == WRITE_CNFG_FIRST_TIME_TO_MBR3110 )
+    //  for factory preset device
+    i2cAdrs = CAP_SENSE_ADDRESS_ORG;
+#else
+    //  for rewriting config to current device
+    i2cAdrs = tI2cAdrs[number];
+#endif
+
+    delay(15);
+    i2cdata[0] = CTRL_CMD;
+    i2cdata[1] = POWER_ON_AND_FINISHED;
+    write_i2cDevice(i2cAdrs,i2cdata,2);
+    delay(900);
+    int cnfgerr = MBR3110_writeConfig(number,i2cAdrs);
+    
+    i2cAdrs = tI2cAdrs[number];
+    delay(15);
+    i2cdata[0] = CTRL_CMD;
+    i2cdata[1] = POWER_ON_AND_FINISHED;
+    write_i2cDevice(i2cAdrs,i2cdata,2);
+    delay(900);
+    
+    const unsigned char* configData = tConfigPtr[number];
+    unsigned char checksum1, checksum2;
+    checksum1 = configData[126];
+    checksum2 = configData[127];      
+    if ( MBR3110_checkWriteConfig(checksum1,checksum2,i2cAdrs) == 0 ){
+      //  checksum got correct.
+      break;
+    }
+  }
+
+  int err = MBR3110_selfTest(&selfCheckResult,number);
   if ( err != 0 ){ return err; }
 
   if ( selfCheckResult & 0x80 ){
@@ -345,7 +413,6 @@ int MBR3110_writeConfig( int number, unsigned char crntI2cAdrs )
 	unsigned char	data[CONFIG_DATA_SZ+1];
 	int				err;
   const unsigned char* configData = tConfigPtr[number];
-  const unsigned char i2cAdrs = tI2cAdrs[number];
 
 	//*** Step 1 ***
 	//	Check Power On

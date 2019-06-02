@@ -25,35 +25,28 @@
 //     Global Variables
 //
 /*----------------------------------------------------------------------------*/
-#define PIN 2
-Adafruit_NeoPixel led = Adafruit_NeoPixel(MAX_LED, PIN, NEO_GRB + NEO_KHZ800);
+#define NEO_PIXEL_PIN 2
+Adafruit_NeoPixel led = Adafruit_NeoPixel(MAX_LED, NEO_PIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
-#define RED_LED   6
-#define GREEN_LED 7
-
-//  Touch Sensor
-uint16_t swState[2];
-GlobalTimer gt;
+#define RED_LED   6   //  LED for Debug
+#define GREEN_LED 7   //  LED for Debug
 
 /*----------------------------------------------------------------------------*/
+GlobalTimer gt;
 static MagicFlute mf;
 
-
+/*----------------------------------------------------------------------------*/
+//
+//     Arduino Basic Functions
+//
 /*----------------------------------------------------------------------------*/
 void flash()
-{
+{ //  interrupt
   gt.incGlobalTime();
 }
 /*----------------------------------------------------------------------------*/
 void setup()
 {
-  int err;
-
-	//  Initialize Variables
-  for ( int j=0; j<2; j++ ){
-	  swState[j] = 0;
-  }
-
   //  Initialize Hardware
   wireBegin();
   Serial.begin(31250);
@@ -72,8 +65,14 @@ void setup()
   digitalWrite(GREEN_LED, LOW);
 
   //  MBR3110
-  err = MBR3110_init(); //  enable to omit an argument
+  //  first time only
+#if (( FIRMMODE == WRITE_CNFG_FIRST_TIME_TO_MBR3110 ) || ( FIRMMODE == WRITE_NEW_CNFG_SETTING ))
+  MBR3110_setup();
+  while(1);
+#else
+  int err = MBR3110_init(); //  enable to omit an argument
   if ( err ){ while(1){ digitalWrite(RED_LED, HIGH); setAda88_Number(err);}}
+#endif
 
   digitalWrite(5,LOW);  //  Mute Off
 
@@ -91,9 +90,12 @@ void loop()
   //  Global Timer 
   generateTimer();
 
-  //  Touch Sensor
-  int prs = mf.checkSixTouch_AndAirPressure();
+  //  Air Pressure Sensor
+  int prs = mf.midiOutAirPressure();
   setAda88_Number(prs);
+
+  //  Touch Sensor
+  mf.checkSixTouch();
 
 	delay(2);
 }
@@ -106,6 +108,10 @@ int analogDataRead( void )
 {
   return analogRead(0);
 }
+void displayError( void )
+{
+  digitalWrite(RED_LED, HIGH);
+}
 /*----------------------------------------------------------------------------*/
 //
 //     Global Timer
@@ -113,13 +119,11 @@ int analogDataRead( void )
 /*----------------------------------------------------------------------------*/
 void generateTimer( void )
 {
-  uint16_t  gTime = gt.globalTime();
-  long diff = gTime - gt.gtOld();
-  gt.setGtOld(gTime);
-  if ( diff < 0 ){ diff += 0x10000; }
+  uint32_t diff = gt.readGlobalTimeAndClear();
 
   gt.clearAllTimerEvent();
   gt.updateTimer(diff);
+  //setAda88_Number(diff);
 
   if ( gt.timer100msecEvent() == true ){
     mf.periodic100msec();

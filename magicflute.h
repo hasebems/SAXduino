@@ -20,21 +20,22 @@ void checkSixTouch( void );
 
 class MagicFlute {
 public:
-  MagicFlute() : _lastTouch(0), _crntTouch(0), _tapTouch(0),
-                      _lastNote(0x24),    //  any touch senser isn't on
-                      _startTime(0), _deadBand(0), _touchCurrentStatus(0),
-                      _crntNote(96), _doremi(12), _nowPlaying(false),
-                      _midiExp(0) {}
+  MagicFlute() : _swState(0), _lastTouch(0), _crntTouch(0), _tapTouch(0),
+                 _lastNote(0x24),    //  any touch senser isn't on
+                 _startTime(0), _deadBand(0), _touchCurrentStatus(0),
+                 _crntNote(96), _doremi(12), _nowPlaying(false),
+                 _midiExp(0) {}
 
   MagicFlute(const MagicFlute& orig);
   virtual ~MagicFlute(){}
 
+  void    checkSixTouch( void );
+  int     midiOutAirPressure( void );
   void    periodic100msec( void );
   
   void    setNewTouch( uint8_t tch );
   uint8_t getNewNote( void );
   bool    catchEventOfPeriodic( uint8_t& midiValue, uint32_t crntTime );
-  int     checkSixTouch_AndAirPressure( void );
 
   void    setCrntNote( uint8_t nt ){ _crntNote = nt;}
   uint8_t crntNote( void ) const { return _crntNote;}
@@ -46,10 +47,11 @@ public:
 
 private:
   void    analyseSixTouchSens( uint8_t tch );
-  int     midiOutAirPressure( void );
   void    setNeoPixelExp( uint8_t note, uint8_t exprs );
   
   static const unsigned char swTable[64];
+
+  uint16_t     _swState;
 
   uint8_t     _lastTouch;
   uint8_t     _crntTouch;

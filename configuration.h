@@ -19,6 +19,14 @@
 #define   MAX_LED       6
 
 //---------------------------------------------------------
+//    Firmware Mode
+//---------------------------------------------------------
+#define   WRITE_CNFG_FIRST_TIME_TO_MBR3110  0
+#define   WRITE_NEW_CNFG_SETTING            1
+#define   NORMAL_MODE                       2
+#define   FIRMMODE        NORMAL_MODE
+
+//---------------------------------------------------------
 //		I2C Device Configuration
 //---------------------------------------------------------
 #define		USE_CY8CMBR3110

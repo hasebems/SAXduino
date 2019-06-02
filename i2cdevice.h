@@ -16,6 +16,7 @@ void initHardware( void );
 
 // USE_CY8CMBR3110
 	int MBR3110_init( int number=0 );
+  int MBR3110_setup( int number=0 );
 	int MBR3110_readData( unsigned char cmd, unsigned char* data, int length, unsigned char i2cAdrs );
 	int MBR3110_selfTest( unsigned char* result, int number );
 	void MBR3110_changeSensitivity( unsigned char data, int number=0 );

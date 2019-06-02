@@ -105,7 +105,7 @@ void AirPressure::analyseStandardPressure( int crntPrs )
 
   //  Analize Standard Pressure
   if ( _newProposedPressure+NOISE_WIDTH < crntPrs ){
-     _samePressureCounter = 0;
+    _samePressureCounter = 0;
     _newProposedPressure = crntPrs - NOISE_WIDTH;
   }
   else if ( _newProposedPressure-NOISE_WIDTH > crntPrs ){
