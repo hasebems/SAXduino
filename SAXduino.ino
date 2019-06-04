@@ -108,6 +108,7 @@ int analogDataRead( void )
 {
   return analogRead(0);
 }
+/*----------------------------------------------------------------------------*/
 void displayError( void )
 {
   digitalWrite(RED_LED, HIGH);
@@ -141,7 +142,7 @@ void setMidiBuffer( uint8_t dt0, uint8_t dt1, uint8_t dt2 )
 {
   Serial.write(dt0);
   Serial.write(dt1);
-  Serial.write(dt2);
+  if ( dt2 != 0xff ) Serial.write(dt2);
 }
 /*----------------------------------------------------------------------------*/
 //
