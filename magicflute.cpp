@@ -127,7 +127,7 @@ int MagicFlute::midiOutAirPressure( void )
         }
       }
       setMidiBuffer( 0xb0, 0x0b, _midiExp );
-      setMidiBuffer( 0xb0, 0x01, (_midiExp>>2)+64 );
+      setMidiBuffer( 0xb0, 0x01, (_midiExp>>3)+32 );
     }
   }
 #endif
@@ -136,7 +136,7 @@ int MagicFlute::midiOutAirPressure( void )
 //-------------------------------------------------------------------------
 void MagicFlute::periodic100msec( void )
 {
-  setNeoPixelExp( _doremi, _midiExp ); //  for debug
+  setNeoPixelExp( _doremi, _midiExp );
 }
 
 
@@ -255,9 +255,11 @@ void MagicFlute::analyseSixTouchSens( uint8_t tch )
 void MagicFlute::setVoiceChangeProcess( uint8_t newNote, uint8_t oldNote )
 {
   if (( oldNote == 0x60 ) && ( newNote == 0x61 )){
+    //  touch
     _vceChangeProcess = 1;
   }
   else if (( oldNote == 0x61 ) && ( newNote == 0x60 ) && ( _vceChangeProcess == 3 )){
+    //  release a finger
     _vceChangeProcess = 4;
   }
   else {
@@ -280,15 +282,17 @@ void MagicFlute::setNeoPixelExp( uint8_t note, uint8_t exprs )
       setLed(i,0,0,0);
     }
   }
+
 #else
   uint8_t light = (exprs >> 4) + 1;  // 1-8
   for ( int i=0; i<MAX_LED; i++ ){
     if ( _vceChangeProcess > 0 ){  //  for Voice Change Process
-      if (( gt.timer100ms() & 0x0002 ) && ( _vceChangeProcess >= 3 )){
+      int cnt = gt.timer100ms() & 0x0007;
+      if (( cnt != i ) && ( _vceChangeProcess >= 3 )){
         setLed(i,0,0,0);  // blink
       }
       else {
-        setLed(i,30,30,70);
+        setLed(i,30,30,30);
       }
     }
     else if ( _swState & (0x0001<<i)){
