@@ -33,6 +33,13 @@ const uint8_t AirPressure::pressureToMidiTable[130] =
 };
 
 /*----------------------------------------------------------------------------*/
+const uint8_t  AirPressure::ZERO_OFFSET = 10;
+const int AirPressure::MIDI_EXP_ITP_STEP = 8;
+const int AirPressure::STABLE_COUNT = 200;          // *10msec = 2sec
+const int AirPressure::PWRON_DEAD_BAND_TIME = 300;  // *10msec = 3sec
+const int AirPressure::NOISE_WIDTH = 8;
+
+/*----------------------------------------------------------------------------*/
 //
 //     Get Air Presure
 //
@@ -43,7 +50,8 @@ int AirPressure::getPressure( void )
   for ( int i=0; i<MOVING_AV_MAX-1; i++ ){
     _movingAv[i] = _movingAv[i+1];
   }
-  _movingAv[MOVING_AV_MAX-1] = analogDataRead();
+  _movingAv[MOVING_AV_MAX-1] = ap4_getAirPressure(); // analogDataRead();
+
   int total = 0;
   for ( int i=0; i<MOVING_AV_MAX; i++ ){
     total += _movingAv[i];

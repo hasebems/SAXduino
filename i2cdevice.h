@@ -29,6 +29,9 @@ void initHardware( void );
 	void ada88_write( int letter );
 	void ada88_writeNumber( int num );
 
+// USE_AP4
+  int ap4_getAirPressure( void );
+
 // USE_AQM1602XA
 	void aqm1602xa_init( void );
 	void aqm1602xa_setStringUpper( int locate, char* str, int strNum );

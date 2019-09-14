@@ -33,16 +33,13 @@ private:
   uint8_t   interpolateMidiExp( uint8_t realExp );
 
 
-  static const uint8_t  ZERO_OFFSET = 10;
-  static const int MIDI_EXP_ITP_STEP = 8;
-  static const int STABLE_COUNT = 200;          // *10msec = 2sec
-  static const int PWRON_DEAD_BAND_TIME = 300;  // *10msec = 3sec
-  static const int NOISE_WIDTH = 8;
+  static const uint8_t  ZERO_OFFSET;
+  static const int MIDI_EXP_ITP_STEP;
+  static const int STABLE_COUNT;
+  static const int PWRON_DEAD_BAND_TIME;
+  static const int NOISE_WIDTH;
+
   static const int INPUT_INDEX_MAX = 130;
-
-
-//  static const unsigned char tExpValue[MAX_EXP_WIDTH];
-
   static const uint8_t pressureToMidiTable[INPUT_INDEX_MAX];
 
 //  float   _lastRawPressure;

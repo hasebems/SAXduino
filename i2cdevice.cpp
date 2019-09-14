@@ -94,8 +94,29 @@ int read_nbyte_i2cDevice( unsigned char adrs, unsigned char* wrBuf, unsigned cha
 
 	return 0;
 }
+//---------------------------------------------------------
+//    Read Only N byte I2C Device
+//    Err Code
+//      0:success
+//      1:data too long to fit in transmit buffer
+//      2:received NACK on transmit of address
+//      3:received NACK on transmit of data
+//      4:other error
+//---------------------------------------------------------
+int read_only_nbyte_i2cDevice( unsigned char adrs, unsigned char* rdBuf, int rdCount )
+{
+  unsigned char err;
 
+  err = Wire.requestFrom(adrs,static_cast<uint8_t>(rdCount),static_cast<uint8_t>(false));
+  int rdAv = Wire.available();
+  while( rdAv ) {
+    *(rdBuf+rdCount-rdAv) = Wire.read();
+    rdAv--;
+  }
 
+  err = Wire.endTransmission(true);
+  return err;
+}
 
 #ifdef USE_CY8CMBR3110
 //-------------------------------------------------------------------------
@@ -608,6 +629,24 @@ void ada88_writeNumber( int num )	//	num 1999 .. -1999
 		i2cBufx[i*2+2] = 0;
 	}
 	write_i2cDevice( ADA88_I2C_ADRS, i2cBufx, 17 );
+}
+#endif
+
+
+#ifdef USE_AP4
+//---------------------------------------------------------
+//    << AP4 >>
+//---------------------------------------------------------
+#define   AP4_I2C_ADRS 0x28
+//-------------------------------------------------------------------------
+//      AP4
+//-------------------------------------------------------------------------
+int ap4_getAirPressure( void )
+{
+  int   err = 0;
+  unsigned char buf[2];
+  err = read_only_nbyte_i2cDevice( AP4_I2C_ADRS, buf, 2);
+  return (static_cast<int>(buf[0]&0x3f)*256+buf[1])/10;
 }
 #endif
 
