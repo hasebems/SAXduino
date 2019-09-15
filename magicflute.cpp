@@ -288,7 +288,7 @@ void MagicFlute::setNeoPixelExp( uint8_t note, uint8_t exprs )
   for ( int i=0; i<MAX_LED; i++ ){
     if ( _vceChangeProcess > 0 ){  //  for Voice Change Process
       int cnt = gt.timer100ms() & 0x0007;
-      if (( cnt != i ) && ( _vceChangeProcess >= 3 )){
+      if (( cnt != i ) && ( _vceChangeProcess >= 4 )){
         setLed(i,0,0,0);  // blink
       }
       else {
