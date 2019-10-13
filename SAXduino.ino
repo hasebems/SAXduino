@@ -124,7 +124,7 @@ void generateTimer( void )
 
   gt.clearAllTimerEvent();
   gt.updateTimer(diff);
-  //setAda88_Number(diff);
+//  setAda88_Number(diff);
 
   if ( gt.timer100msecEvent() == true ){
     mf.periodic100msec();

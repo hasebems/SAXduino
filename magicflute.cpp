@@ -25,6 +25,10 @@
 #define     ALL_SW      (OCT_SW|CRO_SW|SX_SW)
 #define     TAP_FLAG    0x80
 
+#define     MAX_TONE_NUMBER     4
+#define     MAX_TRANSPOSE       6
+#define     MIN_TRANSPOSE       (-6)
+
 //-------------------------------------------------------------------------
 #ifdef USE_AIR_PRESSURE
 AirPressure ap;
@@ -73,24 +77,39 @@ void MagicFlute::checkSixTouch( void )
   if ( err == 0 ){
     _swState = ((uint16_t)swb[0]) | ((uint16_t)swb[1]<<8);
     uint8_t tch = 0;
-    if ( swb[0] & 0x20 ){ tch |= 0x01;}
-    if ( swb[0] & 0x10 ){ tch |= 0x02;}
-    if ( swb[0] & 0x08 ){ tch |= 0x04;}
-    if ( swb[0] & 0x04 ){ tch |= 0x08;}
-    if ( swb[0] & 0x02 ){ tch |= 0x10;}
-    if ( swb[0] & 0x01 ){ tch |= 0x20;}
+    if ( _swState & 0x0020 ){ tch |= 0x01;}
+    if ( _swState & 0x0010 ){ tch |= 0x02;}
+    if ( _swState & 0x0008 ){ tch |= 0x04;}
+    if ( _swState & 0x0004 ){ tch |= 0x08;}
+    if ( _swState & 0x0002 ){ tch |= 0x10;}
+    if ( _swState & 0x0001 ){ tch |= 0x20;}
+    analyseSixTouchSens(tch);
 
-    if (( _vceChangeProcess == 4 ) && ( tch != 0 )){  //  Voice Change Process
-      for ( int i=0; i<MAX_LED; i++ ){
-        if ( tch & (0x01<<i)){
-          setMidiBuffer( 0xc0, i, 0xff );
-          break;
+    if ( nowPlaying() == false ){
+      uint8_t newSwState = static_cast<uint8_t>((_swState & 0x03c0)>>6);
+      if ( newSwState ^ _lastSwState ){
+        //  Change Tone
+        if ( newSwState & 0x01 ){
+          if ( ++_toneNumber >= MAX_TONE_NUMBER ){ _toneNumber = 0; }
+          setMidiBuffer( 0xc0, _toneNumber, 0xff );
+          _ledIndicatorCntr = 1;
+        }
+        if ( newSwState & 0x02 ){
+          if ( --_toneNumber < 0 ){ _toneNumber = MAX_TONE_NUMBER-1; }
+          setMidiBuffer( 0xc0, _toneNumber, 0xff );
+          _ledIndicatorCntr = 1;
+        }
+        //  Transpose
+        if ( newSwState & 0x04 ){
+          if ( ++_transpose > MAX_TRANSPOSE ){ _transpose = MAX_TRANSPOSE; }
+          _ledIndicatorCntr = 101;
+        }
+        if ( newSwState & 0x08 ){
+          if ( --_transpose < MIN_TRANSPOSE ){ _transpose = MIN_TRANSPOSE; }
+          _ledIndicatorCntr = 101;
         }
       }
-      _vceChangeProcess = 0;
-    }
-    else {
-      analyseSixTouchSens(tch);
+      _lastSwState = newSwState;
     }
   }
 }
@@ -102,29 +121,15 @@ int MagicFlute::midiOutAirPressure( void )
   prs = ap.getPressure();
   if ( gt.timer10msecEvent() == true ){
     if ( ap.generateExpEvent(midiExpPtr()) == true ){
-      if ( nowPlaying() == false ){
-        if ( _midiExp > 0 ){
-          _nowPlaying = true;
-          if ( _vceChangeProcess == 1 ){
-            _vceChangeProcess = 2;  //  for Voice Change Process
-          }
-          else {
-            setMidiBuffer( 0x90, _crntNote, 0x7f );
-          }
-          _doremi = _crntNote%12;
-        }
+      if (( nowPlaying() == false ) && ( _midiExp > 0 )){
+        _nowPlaying = true;
+        setMidiBuffer( 0x90, _crntNote+_transpose, 0x7f );
+        _doremi = _crntNote%12;
       }
-      else {
-        if ( _midiExp == 0 ){
-          _nowPlaying = false;
-          if ( _vceChangeProcess == 2 ){
-            _vceChangeProcess = 3;  //  for Voice Change Process
-          }
-          else {
-            setMidiBuffer( 0x80, _crntNote, 0x40 );
-          }
-          _doremi = 12;
-        }
+      else if (( nowPlaying() == true ) && ( _midiExp == 0 )){
+        _nowPlaying = false;
+        setMidiBuffer( 0x80, _crntNote+_transpose, 0x40 );
+        _doremi = 12;
       }
       setMidiBuffer( 0xb0, 0x0b, _midiExp );
       setMidiBuffer( 0xb0, 0x01, (_midiExp>>3)+32 );
@@ -136,7 +141,7 @@ int MagicFlute::midiOutAirPressure( void )
 //-------------------------------------------------------------------------
 void MagicFlute::periodic100msec( void )
 {
-  setNeoPixelExp( _doremi, _midiExp );
+  setNeoPixel();
 }
 
 
@@ -161,6 +166,37 @@ uint8_t MagicFlute::getNewNote( void )
   return _lastSw;
 }
 //-------------------------------------------------------------------------
+bool MagicFlute::decideDeadBand_byNoteDiff( uint8_t& midiValue, uint32_t crntTime, int diff )
+{
+  bool ret = false;
+
+  if ( diff >= 12 ){
+    _startTime = crntTime;
+    _deadBand = 3;
+    if ((_crntTouch^_lastTouch)&_crntTouch){
+      //if (_dbg) _dbg->printf("<<Set Tap>>\n");
+      _tapTouch = _lastTouch|TAP_FLAG;
+    }
+  }
+  else if ( diff >= 9 ){
+    // 9 - 11
+    _startTime = crntTime;
+    _deadBand = 2;
+  }
+  else if ( diff >= 3 ){
+    // 3 - 8
+    _startTime = crntTime;
+    _deadBand = 1;
+  }
+  else {
+    // 0 - 2
+    midiValue = getNewNote();
+    ret = true;
+  }
+
+  return ret;
+}
+//-------------------------------------------------------------------------
 bool MagicFlute::catchEventOfPeriodic( uint8_t& midiValue, uint32_t crntTime )
 {
   bool    ret = false;
@@ -178,8 +214,8 @@ bool MagicFlute::catchEventOfPeriodic( uint8_t& midiValue, uint32_t crntTime )
   }
 
   else {
-    if ((_deadBand > 0) && (_tapTouch&TAP_FLAG) && ((_tapTouch&ALL_SW) == _crntTouch)){
-      //  NoteOn
+    if (( _deadBand > 0 ) && ( _tapTouch&TAP_FLAG ) && (( _tapTouch&ALL_SW ) == _crntTouch )){
+      //  NoteOn by Tap
       //if (_dbg) _dbg->printf("<<Tapped>>\n");
       midiValue = getNewNote();
       ret = true;
@@ -192,29 +228,7 @@ bool MagicFlute::catchEventOfPeriodic( uint8_t& midiValue, uint32_t crntTime )
       if ( newNote > _lastSw ){ diff = newNote - _lastSw;}
       else { diff = _lastSw - newNote;}
 
-      if ( diff >= 12 ){
-        _startTime = crntTime;
-        _deadBand = 3;
-        if ((_crntTouch^_lastTouch)&_crntTouch){
-          //if (_dbg) _dbg->printf("<<Set Tap>>\n");
-          _tapTouch = _lastTouch|TAP_FLAG;
-        }
-      }
-      else if ( diff >= 9 ){
-        // 9 - 11
-        _startTime = crntTime;
-        _deadBand = 2;
-      }
-      else if ( diff >= 3 ){
-        // 3 - 8
-        _startTime = crntTime;
-        _deadBand = 1;
-      }
-      else {
-        // 0 - 2
-        midiValue = getNewNote();
-        ret = true;
-      }
+      ret = decideDeadBand_byNoteDiff(midiValue, crntTime, diff);
     }
 
     //  update lastSwData
@@ -233,46 +247,77 @@ void MagicFlute::analyseSixTouchSens( uint8_t tch )
     if ( catchEventOfPeriodic(mdNote, gt.timer10ms()) == true ){
       if ( _nowPlaying == true ){
         if ( mdNote != _crntNote ){
-          setMidiBuffer( 0x90, mdNote, 0x7f );
-          setMidiBuffer( 0x80, _crntNote, 0x40 );
+          setMidiBuffer( 0x90, mdNote+_transpose, 0x7f );
+          setMidiBuffer( 0x80, _crntNote+_transpose, 0x40 );
         }
         else {
-          setMidiBuffer( 0x80, _crntNote, 0x40 );          
-          setMidiBuffer( 0x90, mdNote, 0x7f );
+          setMidiBuffer( 0x80, _crntNote+_transpose, 0x40 );          
+          setMidiBuffer( 0x90, mdNote+_transpose, 0x7f );
         }
         _doremi = mdNote%12;
       }
       else {
-        setMidiBuffer(0xa0, mdNote, 0x01);
-        setMidiBuffer(0xa0, _crntNote, 0 );
-        setVoiceChangeProcess( mdNote, _crntNote );
+        setMidiBuffer(0xa0, mdNote+_transpose, 0x01);
+        setMidiBuffer(0xa0, _crntNote+_transpose, 0 );
       }
       _crntNote = mdNote;
     }
   }
 }
 /*----------------------------------------------------------------------------*/
-void MagicFlute::setVoiceChangeProcess( uint8_t newNote, uint8_t oldNote )
+void MagicFlute::indicateToneAndTranspose( void )
 {
-  if (( oldNote == 0x60 ) && ( newNote == 0x61 )){
-    //  touch
-    _vceChangeProcess = 1;
-  }
-  else if (( oldNote == 0x61 ) && ( newNote == 0x60 ) && ( _vceChangeProcess == 3 )){
-    //  release a finger
-    _vceChangeProcess = 4;
+  if ( nowPlaying() == true ){
+    _ledIndicatorCntr = 0;
   }
   else {
-    _vceChangeProcess = 0;
+    if ( _ledIndicatorCntr > 100 ){
+      //  Indicate Transpose
+      const bool plus = (_transpose>=0)? true:false;
+      const int ledNum = plus? _transpose-1:(0-_transpose);
+      if ( _transpose != 0 ){
+        if (plus == true) { setLed(ledNum,100,0,0);}
+        else              { setLed(ledNum,0,0,100);}
+      }
+      if ( ++_ledIndicatorCntr > 103 ){
+        if ( ledNum >= 0 ){ setLed(ledNum,0,0,0);}
+        _ledIndicatorCntr = 0;
+      }
+    }
+    else {
+      //  Indicate Tone Number
+      setLed(_toneNumber,0,100,0);
+      if ( ++_ledIndicatorCntr > 3 ){
+        setLed(_toneNumber,0,0,0);
+        _ledIndicatorCntr = 0;
+      }
+    }
   }
 }
 /*----------------------------------------------------------------------------*/
-void MagicFlute::setNeoPixelExp( uint8_t note, uint8_t exprs )
+void MagicFlute::indicatePitchAndExpression( void )
+{
+  uint8_t light = (_midiExp >> 4) + 1;  // 1-8
+  for ( int i=0; i<MAX_LED; i++ ){
+    if ( _swState & (0x0001<<i)){
+      int16_t red = colorTbl(_doremi%16,0)*light/8;
+      int16_t green = colorTbl(_doremi%16,1)*light/8;
+      int16_t blue = colorTbl(_doremi%16,2)*light/8;
+      setLed(i,red,green,blue);
+    }
+    else {
+      setLed(i,0,0,0);
+    }
+  }
+}
+/*----------------------------------------------------------------------------*/
+void MagicFlute::setNeoPixel( void )
 {
 #if 0
   //  expression reflects number of LED
-  int blinkNum = (exprs >> 4) + 1;
-  if ( exprs == 0 ){ blinkNum = 0;}
+  uint8_t note = _doremi;
+  int blinkNum = (_exprs >> 4) + 1;
+  if ( _exprs == 0 ){ blinkNum = 0;}
 
   for ( int i=0; i<MAX_LED; i++ ){
     if (( i<blinkNum ) /*& !( _swState & (0x0080>>i))*/){
@@ -284,26 +329,11 @@ void MagicFlute::setNeoPixelExp( uint8_t note, uint8_t exprs )
   }
 
 #else
-  uint8_t light = (exprs >> 4) + 1;  // 1-8
-  for ( int i=0; i<MAX_LED; i++ ){
-    if ( _vceChangeProcess > 0 ){  //  for Voice Change Process
-      int cnt = gt.timer100ms() & 0x0007;
-      if (( cnt != i ) && ( _vceChangeProcess >= 4 )){
-        setLed(i,0,0,0);  // blink
-      }
-      else {
-        setLed(i,30,30,30);
-      }
-    }
-    else if ( _swState & (0x0001<<i)){
-      int16_t red = colorTbl(note%16,0)*light/8;
-      int16_t green = colorTbl(note%16,1)*light/8;
-      int16_t blue = colorTbl(note%16,2)*light/8;
-      setLed(i,red,green,blue);
-    }
-    else {
-      setLed(i,0,0,0);
-    }
+  if ( _ledIndicatorCntr > 0 ){
+    indicateToneAndTranspose();
+  }
+  else {
+    indicatePitchAndExpression();
   }
 #endif
   lightLed();
