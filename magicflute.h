@@ -28,7 +28,7 @@ public:
                  _ledIndicatorCntr(0) {}
 
   MagicFlute(const MagicFlute& orig);
-  virtual ~MagicFlute(){}
+//  virtual ~MagicFlute(){}
 
   void    checkSixTouch( void );
   int     midiOutAirPressure( void );
@@ -40,6 +40,7 @@ private:
   bool    decideDeadBand_byNoteDiff( uint8_t& midiValue, uint32_t crntTime, int diff );
   bool    catchEventOfPeriodic( uint8_t& midiValue, uint32_t crntTime );
   void    analyseSixTouchSens( uint8_t tch );
+  void    indicateParticularLed( int num, uint8_t red, uint8_t grn, uint8_t blu );
   void    indicateToneAndTranspose( void );
   void    indicatePitchAndExpression( void );
   void    setNeoPixel( void );
@@ -51,6 +52,9 @@ private:
 //  void    setMidiExp( uint8_t mexp ){ _midiExp = mexp;}
 //  uint8_t midiExp( void ) const { return _midiExp;}
   uint8_t*  midiExpPtr( void ){ return &_midiExp;}
+
+  static const int _MAX_TOUCH_SW = 6;
+  static const int _ALL_CLEAR = _MAX_TOUCH_SW;
 
   static const unsigned char swTable[];
 

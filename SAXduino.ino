@@ -83,6 +83,15 @@ void setup()
   //  Set Interrupt
   MsTimer2::set(10, flash);     // 10ms Interval Timer Interrupt
   MsTimer2::start();
+
+  //  Opening
+  for ( int i=0; i<6; i++ ){
+    while( gt.globalTime() < (i+1)*10 ){
+      setLed( i, 200, 180, 150 ); lightLed();
+    }
+    setLed( i, 0, 0, 0 );
+    lightLed();
+  }
 }
 /*----------------------------------------------------------------------------*/
 void loop()

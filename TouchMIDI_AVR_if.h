@@ -45,6 +45,7 @@ public:
   uint32_t  timer10ms( void ) const { return _timer10msec;}
   uint32_t  timer100ms( void ) const { return _timer100msec;}
   uint32_t  timer1s( void ) const { return _timer1sec;}
+  uint8_t   globalTime( void ) const { return _globalTime;}
 
   void      clearAllTimerEvent( void ){ _timer10msec_event = _timer100msec_event = _timer1sec_event = false;}
   bool      timer10msecEvent( void ) const { return _timer10msec_event;}

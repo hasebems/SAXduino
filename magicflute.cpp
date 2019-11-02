@@ -265,6 +265,14 @@ void MagicFlute::analyseSixTouchSens( uint8_t tch )
   }
 }
 /*----------------------------------------------------------------------------*/
+void MagicFlute::indicateParticularLed( int num, uint8_t red, uint8_t grn, uint8_t blu )
+{
+  for ( int i=0; i<_MAX_TOUCH_SW; ++i ){
+    if ( i == num ){ setLed(i,red,grn,blu);}
+    else { setLed(i,0,0,0);}
+  }
+}
+/*----------------------------------------------------------------------------*/
 void MagicFlute::indicateToneAndTranspose( void )
 {
   if ( nowPlaying() == true ){
@@ -273,23 +281,27 @@ void MagicFlute::indicateToneAndTranspose( void )
   else {
     if ( _ledIndicatorCntr > 100 ){
       //  Indicate Transpose
-      const bool plus = (_transpose>=0)? true:false;
-      const int ledNum = plus? _transpose-1:(0-_transpose);
-      if ( _transpose != 0 ){
-        if (plus == true) { setLed(ledNum,100,0,0);}
-        else              { setLed(ledNum,0,0,100);}
-      }
-      if ( ++_ledIndicatorCntr > 103 ){
-        if ( ledNum >= 0 ){ setLed(ledNum,0,0,0);}
+      ++_ledIndicatorCntr;
+      if ( _ledIndicatorCntr > 103 ){
+        indicateParticularLed(_ALL_CLEAR,0,0,0);
         _ledIndicatorCntr = 0;
+      }
+      else {
+        const bool plus = (_transpose>=0)? true:false;
+        const int ledNum = plus? _transpose:(-_transpose-1);
+        if (plus == true) { indicateParticularLed(ledNum,100,0,0);}
+        else              { indicateParticularLed(ledNum,0,0,100);}
       }
     }
     else {
       //  Indicate Tone Number
-      setLed(_toneNumber,0,100,0);
-      if ( ++_ledIndicatorCntr > 3 ){
-        setLed(_toneNumber,0,0,0);
+      ++_ledIndicatorCntr;
+      if ( _ledIndicatorCntr > 3 ){
+        indicateParticularLed(_ALL_CLEAR,0,0,0);
         _ledIndicatorCntr = 0;
+      }
+      else {
+        indicateParticularLed(_toneNumber,0,100,0);
       }
     }
   }
