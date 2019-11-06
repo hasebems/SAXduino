@@ -26,7 +26,7 @@
 #define     TAP_FLAG    0x80
 
 #define     MAX_TONE_NUMBER     4
-#define     MAX_TRANSPOSE       6
+#define     MAX_TRANSPOSE       5
 #define     MIN_TRANSPOSE       (-6)
 
 //-------------------------------------------------------------------------
