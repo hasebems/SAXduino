@@ -1,0 +1,7 @@
+{
+    "board": "ATMegaCore:avr:atmega-2",
+    "programmer": "Arduino as ISP",
+    "port": "/dev/cu.usbmodem141201",
+    "sketch": "SAXduino.ino",
+    "configuration": "clock=external-16"
+}

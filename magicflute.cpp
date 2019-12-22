@@ -29,6 +29,8 @@
 #define     MAX_TRANSPOSE       5
 #define     MIN_TRANSPOSE       (-6)
 
+#define     MUTE_TIME           5    //  *100 [msec]
+
 //-------------------------------------------------------------------------
 #ifdef USE_AIR_PRESSURE
 AirPressure ap;
@@ -123,11 +125,14 @@ int MagicFlute::midiOutAirPressure( void )
     if ( ap.generateExpEvent(midiExpPtr()) == true ){
       if (( nowPlaying() == false ) && ( _midiExp > 0 )){
         _nowPlaying = true;
+        setMute(false);
+        _muteCounter = 1000;  //  100sec
         setMidiBuffer( 0x90, _crntNote+_transpose, 0x7f );
         _doremi = _crntNote%12;
       }
       else if (( nowPlaying() == true ) && ( _midiExp == 0 )){
         _nowPlaying = false;
+        _muteCounter = MUTE_TIME;
         setMidiBuffer( 0x80, _crntNote+_transpose, 0x40 );
         _doremi = 12;
       }
@@ -142,6 +147,12 @@ int MagicFlute::midiOutAirPressure( void )
 void MagicFlute::periodic100msec( void )
 {
   setNeoPixel();
+  if ( _muteCounter != 0 ){
+    _muteCounter -= 1;
+    if (( _muteCounter == 0 ) && ( _nowPlaying == false )){
+      setMute(true);
+    }
+  }
 }
 
 
@@ -190,8 +201,21 @@ bool MagicFlute::decideDeadBand_byNoteDiff( uint8_t& midiValue, uint32_t crntTim
   }
   else {
     // 0 - 2
-    midiValue = getNewNote();
-    ret = true;
+    uint8_t crntRight = _crntTouch & 0x07;
+    uint8_t lastRight = _lastTouch & 0x07;
+    // only one release event of right finger
+    switch (~crntRight & lastRight){
+      //case 0x01:
+      case 0x02:
+      //case 0x04:
+        _startTime = crntTime;
+        _deadBand = 1;
+        break;
+      default:
+        midiValue = getNewNote();
+        ret = true;
+        break;
+    }
   }
 
   return ret;
@@ -222,11 +246,11 @@ bool MagicFlute::catchEventOfPeriodic( uint8_t& midiValue, uint32_t crntTime )
     }
 
     else {
-      int diff;
+      int diff = 0;
       uint8_t newNote = swTable[_crntTouch & ALL_SW];
 
-      if ( newNote > _lastSw ){ diff = newNote - _lastSw;}
-      else { diff = _lastSw - newNote;}
+      if ( newNote > _lastSw ){ diff += newNote - _lastSw;}
+      else { diff += _lastSw - newNote;}
 
       ret = decideDeadBand_byNoteDiff(midiValue, crntTime, diff);
     }
@@ -251,7 +275,8 @@ void MagicFlute::analyseSixTouchSens( uint8_t tch )
           setMidiBuffer( 0x80, _crntNote+_transpose, 0x40 );
         }
         else {
-          setMidiBuffer( 0x80, _crntNote+_transpose, 0x40 );          
+          // Same Note
+          setMidiBuffer( 0x80, mdNote+_transpose, 0x40 );
           setMidiBuffer( 0x90, mdNote+_transpose, 0x7f );
         }
         _doremi = mdNote%12;

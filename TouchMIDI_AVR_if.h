@@ -18,6 +18,7 @@ int analogDataRead( void );
 void displayError( void );
 void setAda88_Number( int );
 void setMidiBuffer( uint8_t dt0, uint8_t dt1, uint8_t dt2 );
+void setMute( bool mute );
 
 //  for NeoPixel
 uint8_t colorTbl( uint8_t index, uint8_t rgb );

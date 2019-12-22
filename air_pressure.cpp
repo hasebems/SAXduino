@@ -33,11 +33,11 @@ const uint8_t AirPressure::pressureToMidiTable[130] =
 };
 
 /*----------------------------------------------------------------------------*/
-const uint8_t  AirPressure::ZERO_OFFSET = 10;
+const uint8_t  AirPressure::ZERO_OFFSET = 8;
 const int AirPressure::MIDI_EXP_ITP_STEP = 8;
 const int AirPressure::STABLE_COUNT = 200;          // *10msec = 2sec
-const int AirPressure::PWRON_DEAD_BAND_TIME = 300;  // *10msec = 3sec
-const int AirPressure::NOISE_WIDTH = 8;
+const int AirPressure::PWRON_DEAD_BAND_TIME = 120;  // *10msec = 1.2sec
+const int AirPressure::NOISE_WIDTH = 5;
 
 /*----------------------------------------------------------------------------*/
 //
@@ -153,4 +153,3 @@ uint8_t AirPressure::interpolateMidiExp( uint8_t realExp )
   _lastMidiValue = realExp;
   return realExp;
 }
-

@@ -74,8 +74,6 @@ void setup()
   if ( err ){ while(1){ digitalWrite(RED_LED, HIGH); setAda88_Number(err);}}
 #endif
 
-  digitalWrite(5,LOW);  //  Mute Off
-
   //  Set NeoPixel Library 
   led.begin();
   led.show(); // Initialize all pixels to 'off'
@@ -152,6 +150,16 @@ void setMidiBuffer( uint8_t dt0, uint8_t dt1, uint8_t dt2 )
   Serial.write(dt0);
   Serial.write(dt1);
   if ( dt2 != 0xff ) Serial.write(dt2);
+}
+/*----------------------------------------------------------------------------*/
+void setMute( bool mute )
+{
+  if ( mute == true ){
+    digitalWrite(5,HIGH);  //  Mute On
+  }
+  else {
+    digitalWrite(5,LOW);  //  Mute Off    
+  }
 }
 /*----------------------------------------------------------------------------*/
 //
