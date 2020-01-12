@@ -90,6 +90,9 @@ void setup()
     setLed( i, 0, 0, 0 );
     lightLed();
   }
+
+  //  Init Tone Generator
+  setMidiBuffer( 0xc0, 0, 0xff );
 }
 /*----------------------------------------------------------------------------*/
 void loop()
