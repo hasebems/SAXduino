@@ -25,7 +25,8 @@
 #define     ALL_SW      (OCT_SW|CRO_SW|SX_SW)
 #define     TAP_FLAG    0x80
 
-#define     MAX_TONE_NUMBER     4
+#define     MAX_TONE_NUMBER             4
+#define     MAX_TONE_NUMBER_WITH_OCT    (MAX_TONE_NUMBER*2)
 #define     MAX_TRANSPOSE       5
 #define     MIN_TRANSPOSE       (-6)
 
@@ -92,13 +93,13 @@ void MagicFlute::checkSixTouch( void )
       if ( newSwState ^ _lastSwState ){
         //  Change Tone
         if ( newSwState & 0x01 ){
-          if ( ++_toneNumber >= MAX_TONE_NUMBER ){ _toneNumber = 0; }
-          setMidiBuffer( 0xc0, _toneNumber, 0xff );
+          if ( ++_toneNumber >= MAX_TONE_NUMBER_WITH_OCT ){ _toneNumber = 0; }
+          setMidiBuffer( 0xc0, _toneNumber%MAX_TONE_NUMBER, 0xff );
           _ledIndicatorCntr = 1;
         }
         if ( newSwState & 0x02 ){
           if ( --_toneNumber < 0 ){ _toneNumber = MAX_TONE_NUMBER-1; }
-          setMidiBuffer( 0xc0, _toneNumber, 0xff );
+          setMidiBuffer( 0xc0, _toneNumber%MAX_TONE_NUMBER, 0xff );
           _ledIndicatorCntr = 1;
         }
         //  Transpose
@@ -123,17 +124,18 @@ int MagicFlute::midiOutAirPressure( void )
   prs = ap.getPressure();
   if ( gt.timer10msecEvent() == true ){
     if ( ap.generateExpEvent(midiExpPtr()) == true ){
+      uint8_t oct = (_toneNumber/MAX_TONE_NUMBER)*12;
       if (( nowPlaying() == false ) && ( _midiExp > 0 )){
         _nowPlaying = true;
         setMute(false);
         _muteCounter = 1000;  //  100sec
-        setMidiBuffer( 0x90, _crntNote+_transpose, 0x7f );
+        setMidiBuffer( 0x90, _crntNote+_transpose+oct, 0x7f );
         _doremi = _crntNote%12;
       }
       else if (( nowPlaying() == true ) && ( _midiExp == 0 )){
         _nowPlaying = false;
         _muteCounter = MUTE_TIME;
-        setMidiBuffer( 0x80, _crntNote+_transpose, 0x40 );
+        setMidiBuffer( 0x80, _crntNote+_transpose+oct, 0x40 );
         _doremi = 12;
       }
       setMidiBuffer( 0xb0, 0x0b, _midiExp );
@@ -269,21 +271,22 @@ void MagicFlute::analyseSixTouchSens( uint8_t tch )
   if ( gt.timer10msecEvent() == true ){
     uint8_t mdNote = _crntNote;
     if ( catchEventOfPeriodic(mdNote, gt.timer10ms()) == true ){
+      uint8_t oct = (_toneNumber/MAX_TONE_NUMBER)*12;
       if ( _nowPlaying == true ){
         if ( mdNote != _crntNote ){
-          setMidiBuffer( 0x90, mdNote+_transpose, 0x7f );
-          setMidiBuffer( 0x80, _crntNote+_transpose, 0x40 );
+          setMidiBuffer( 0x90, mdNote+_transpose+oct, 0x7f );
+          setMidiBuffer( 0x80, _crntNote+_transpose+oct, 0x40 );
         }
         else {
           // Same Note
-          setMidiBuffer( 0x80, mdNote+_transpose, 0x40 );
-          setMidiBuffer( 0x90, mdNote+_transpose, 0x7f );
+          setMidiBuffer( 0x80, mdNote+_transpose+oct, 0x40 );
+          setMidiBuffer( 0x90, mdNote+_transpose+oct, 0x7f );
         }
         _doremi = mdNote%12;
       }
       else {
-        setMidiBuffer(0xa0, mdNote+_transpose, 0x01);
-        setMidiBuffer(0xa0, _crntNote+_transpose, 0 );
+        setMidiBuffer(0xa0, mdNote+_transpose+oct, 0x01);
+        setMidiBuffer(0xa0, _crntNote+_transpose+oct, 0 );
       }
       _crntNote = mdNote;
     }
@@ -326,7 +329,12 @@ void MagicFlute::indicateToneAndTranspose( void )
         _ledIndicatorCntr = 0;
       }
       else {
-        indicateParticularLed(_toneNumber,0,100,0);
+        if (( _toneNumber/MAX_TONE_NUMBER ) == 0){
+          indicateParticularLed(_toneNumber%MAX_TONE_NUMBER,0,100,0);
+        }
+        else {
+          indicateParticularLed(_toneNumber%MAX_TONE_NUMBER,50,50,0);          
+        }
       }
     }
   }
