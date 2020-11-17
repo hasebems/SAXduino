@@ -72,42 +72,46 @@ const unsigned char MagicFlute::swTable[64] = {
 /*----------------------------------------------------------------------------*/
 void MagicFlute::checkSixTouch( void )
 {
-  uint8_t swb[2] = {};
+  uint8_t swb[2] = {0};
 
 #ifdef USE_CY8CMBR3110
   int err = MBR3110_readTouchSw(swb);
+  if ( err != 0 ){ return;}
 #endif
-  if ( err == 0 ){
-    _swState = ((uint16_t)swb[0]) | ((uint16_t)swb[1]<<8);
-    uint8_t tch = 0;
-    if ( _swState & 0x0020 ){ tch |= 0x01;}
-    if ( _swState & 0x0010 ){ tch |= 0x02;}
-    if ( _swState & 0x0008 ){ tch |= 0x04;}
-    if ( _swState & 0x0004 ){ tch |= 0x08;}
-    if ( _swState & 0x0002 ){ tch |= 0x10;}
-    if ( _swState & 0x0001 ){ tch |= 0x20;}
-    analyseSixTouchSens(tch);
 
-    if ( nowPlaying() == false ){
-      uint8_t newSwState = static_cast<uint8_t>((_swState & 0x03c0)>>6);
-      if ( newSwState ^ _lastSwState ){
-        //  Change Tone
-        if ( newSwState & 0x01 ){
+  _swState = ((uint16_t)swb[0]) | ((uint16_t)swb[1]<<8);
+  uint8_t tch = 0;
+  if ( _swState & 0x0020 ){ tch |= 0x01;}
+  if ( _swState & 0x0010 ){ tch |= 0x02;}
+  if ( _swState & 0x0008 ){ tch |= 0x04;}
+  if ( _swState & 0x0004 ){ tch |= 0x08;}
+  if ( _swState & 0x0002 ){ tch |= 0x10;}
+  if ( _swState & 0x0001 ){ tch |= 0x20;}
+  analyseSixTouchSens(tch);
+
+  if ( nowPlaying() == false ){
+    uint8_t newSwState = static_cast<uint8_t>((_swState & 0x03c0)>>6);
+    if (newSwState ^ _lastSwState){
+      //  Change Tone
+      if (newSwState == 0x03){
+        if (_lastSwState == 0x02){
           if ( ++_toneNumber >= MAX_TONE_NUMBER_WITH_OCT ){ _toneNumber = 0; }
           setMidiBuffer( 0xc0, _toneNumber%MAX_TONE_NUMBER, 0xff );
           _ledIndicatorCntr = 1;
         }
-        if ( newSwState & 0x02 ){
-          if ( --_toneNumber < 0 ){ _toneNumber = MAX_TONE_NUMBER-1; }
+        if (_lastSwState == 0x01){
+          if ( --_toneNumber < 0 ){ _toneNumber = MAX_TONE_NUMBER_WITH_OCT-1; }
           setMidiBuffer( 0xc0, _toneNumber%MAX_TONE_NUMBER, 0xff );
           _ledIndicatorCntr = 1;
         }
-        //  Transpose
-        if ( newSwState & 0x04 ){
+      }
+      //  Transpose
+      if (newSwState == 0x0c){
+        if (_lastSwState == 0x08){
           if ( ++_transpose > MAX_TRANSPOSE ){ _transpose = MAX_TRANSPOSE; }
           _ledIndicatorCntr = 101;
         }
-        if ( newSwState & 0x08 ){
+        if (_lastSwState == 0x04){
           if ( --_transpose < MIN_TRANSPOSE ){ _transpose = MIN_TRANSPOSE; }
           _ledIndicatorCntr = 101;
         }
